@@ -224,6 +224,7 @@ class CredentialsForm extends React.Component {
         this.toggleClass = this.toggleClass.bind(this);
         this.state = {
             active: true,
+            orgId: '',
             orgPublicKey: '',
             orgPrivateKey: '',
             postResponse: '',
@@ -247,7 +248,7 @@ class CredentialsForm extends React.Component {
 
     handleSubmit = async (event) => {
         event.preventDefault();
-        const requestOpts = {
+        let requestOpts = {
             method: 'POST',
             headers: {
                 'Authorization': '<redacted>',
@@ -267,8 +268,9 @@ class CredentialsForm extends React.Component {
                     }
                 },
                 "data": {
-                    "org-public-key": Buffer.from(this.state.orgPublicKey).toString('base64'),
-                    "org-private-key": Buffer.from(this.state.orgPrivateKey).toString('base64')
+                    "orgId": Buffer.from(this.state.orgId).toString('base64'),
+                    "publicApiKey": Buffer.from(this.state.orgPublicKey).toString('base64'),
+                    "privateApiKey": Buffer.from(this.state.orgPrivateKey).toString('base64')
                 },
                 "type": "Opaque"
             })
@@ -279,7 +281,42 @@ class CredentialsForm extends React.Component {
         )
             .then(response => response.json())
             .then(data =>this.setState({ postResponse: data }));
-        console.log(this.state.postResponse);
+
+        requestOpts = {
+            method: 'POST',
+            headers: {
+                'Authorization': '<redacted>',
+                'Authentication': '<redacted>',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                "apiVersion": "dbaas.redhat.com/v1",
+                "kind": "DBaaSService",
+                "metadata": {
+                    "name": "atlas-dbaas-service",
+                    "namespace": "jary-test",
+                    "labels": {
+                        "related-to": "dbaas-operator",
+                        "type": "dbaas-vendor-service"
+                    }
+                },
+                "spec": {
+                    "provider": {
+                        "name": "MongoDB Atlas"
+                    },
+                    "credentialsSecretName": "dbaas-vendor-credentials-jary",
+                    "credentialsSecretNamespace": "jary-test",
+                },
+            })
+        };
+        fetch(
+            '/apis/dbaas.redhat.com/v1/namespaces/jary-test/dbaasservices',
+            requestOpts
+        )
+            .then(response => response.json())
+            .then(data =>this.setState({ postResponse: data }));
+
         this.toggleClass();
     };
 
@@ -287,6 +324,13 @@ class CredentialsForm extends React.Component {
         return (
             <form id="credentials-form" onSubmit={this.handleSubmit} className={this.state.active ? 'hide' : null}>
                 <div className="radio-div">
+                    <label className="text-field-label" htmlFor="orgId">
+                        Organization ID
+                    </label>
+                    <br/>
+                    <input id="orgId" className="text-field" value={this.state.orgId} name="orgId"
+                           onChange={ event => this.setState({orgId: event.target.value })} />
+                    <br/>
                     <label className="text-field-label" htmlFor="orgPublicKey">
                         Organization Public Key
                     </label>

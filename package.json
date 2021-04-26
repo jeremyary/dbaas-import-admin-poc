@@ -34,5 +34,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "proxy": "https://api.mw-ocp4.cloud.lab.eng.bos.redhat.com:6443"
 }

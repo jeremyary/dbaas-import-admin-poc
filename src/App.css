@@ -99,8 +99,8 @@ form {
   height: 40px;
   width: 98px;
   display: inline-flex;
-  padding-left: 30px;
-  padding-top: 10px;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
 }
 
@@ -111,8 +111,8 @@ form {
   height: 40px;
   width: 98px;
   display: inline-flex;
-  padding-left: 30px;
-  padding-top: 10px;
+  justify-content: center;
+  align-items: center;
   color: #06c;
   border-bottom: 2px solid #06c;
   cursor: pointer;
@@ -167,4 +167,16 @@ button:hover {
   font-weight: 400;
   line-height: 21px;
   margin-bottom: 20px;
+}
+
+.instance-table {
+  width: 100%;
+}
+
+.select-radio-input {
+  margin-right: 5px;;
+}
+
+.select-button {
+  color: white;
 }

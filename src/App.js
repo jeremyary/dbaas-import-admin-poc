@@ -1,8 +1,10 @@
 import React from 'react';
 import './App.css';
+import "@patternfly/react-core/dist/styles/base.css";
 import topLeft from './top-left.png';
 import topRight from './top-right.png';
 import leftNav from './left-nav.png';
+import InstanceTable from './components/InstanceTable';
 
 function toggleVendorTabTitle() {
     const currentState = this.state.active;
@@ -185,27 +187,27 @@ class VendorForm extends React.Component {
             <form id="vendor-select-form" onSubmit={this.handleSubmit} className={this.state.active ? 'hide' : null}>
                 <div className="radio-div">
                     <label className="radio-label">
-                        <input type="radio" id="atlas" value="atlas" name="vendor" defaultChecked={true}/>
+                        <input type="radio" id="atlas" value="atlas" name="vendor" className="select-radio-input" defaultChecked={true}/>
                         MongoDB Atlas
                     </label>
                     <br/>
                     <label className="radio-label">
-                        <input type="radio" value="crunchy" name="vendor"/>
+                        <input type="radio" value="crunchy" name="vendor" className="select-radio-input"/>
                         Crunchy Data PostgreSQL
                     </label>
                     <br/>
                     <label className="radio-label">
-                        <input type="radio" value="cockroach" name="vendor"/>
+                        <input type="radio" value="cockroach" name="vendor" className="select-radio-input"/>
                         CockroachCloud
                     </label>
                     <br/>
                     <label className="radio-label">
-                        <input type="radio" value="couchbase" name="vendor"/>
+                        <input type="radio" value="couchbase" name="vendor" className="select-radio-input"/>
                         Couchbase Cloud
                     </label>
                     <br/>
                     <br/>
-                    <button id="vendor-select-button">Select</button>
+                    <button id="vendor-select-button" className="select-button">Select</button>
                 </div>
             </form>
         );
@@ -345,7 +347,7 @@ class CredentialsForm extends React.Component {
                     <input id="orgPrivateKey" className="text-field" value={this.state.orgPrivateKey} name="orgPrivateKey"
                            onChange={ event => this.setState({orgPrivateKey: event.target.value })} />
                     <br/>
-                    <button id="vendor-select-button">Select</button>
+                    <button id="credential-select-button" className="select-button">Submit</button>
                 </div>
             </form>
         );
@@ -388,14 +390,11 @@ class InstancesForm extends React.Component {
     render() {
         return (
             <form id="instances-form" onSubmit={this.handleSubmit} className={this.state.active ? 'hide' : null}>
-                <div className="radio-div">
-                    <label className="radio-label">
-                        <input type="radio" id="atlas" value="atlas" name="vendor"/>
-                        instances form
-                    </label>
+                <div className="instance-table">
+                    <InstanceTable />
                     <br/>
                     <br/>
-                    <button id="vendor-select-button">Select</button>
+                    <button id="instance-select-button" className="select-button">Connect</button>
                 </div>
             </form>
         );

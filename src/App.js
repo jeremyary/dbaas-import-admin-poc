@@ -162,7 +162,7 @@ class VendorForm extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.toggleClass = this.toggleClass.bind(this);
         this.state = {
-            active: false,
+            active: true,
         };
     }
     toggleClass() {
@@ -182,7 +182,7 @@ class VendorForm extends React.Component {
 
     render() {
         return (
-            <form id="vendor-select-form" onSubmit={this.handleSubmit} className={this.state.active ? 'hide' : null}>
+            <form id="vendor-select-form" onSubmit={this.handleSubmit} className={this.state.active ? null : 'hide'}>
                 <div className="radio-div">
                     <label className="radio-label">
                         <input type="radio" id="atlas" value="atlas" name="vendor" defaultChecked={true}/>
@@ -223,10 +223,10 @@ class CredentialsForm extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.toggleClass = this.toggleClass.bind(this);
         this.state = {
-            active: true,
-            orgId: '',
-            orgPublicKey: '',
-            orgPrivateKey: '',
+            active: false,
+            orgId: '6084842689a3a50549e9c5b0',
+            orgPublicKey: 'grljrhma',
+            orgPrivateKey: 'fe84a759-8d96-4926-8482-3075f411111a',
             postResponse: '',
         };
     }
@@ -243,6 +243,7 @@ class CredentialsForm extends React.Component {
         toggleInstancesTabTitle();
         toggleInstancesSectionTitle();
         toggleInstancesForm();
+        doStatusFetch();
         this.setState({active: !currentState});
     }
 
@@ -251,8 +252,8 @@ class CredentialsForm extends React.Component {
         let requestOpts = {
             method: 'POST',
             headers: {
-                'Authorization': '<redacted>',
-                'Authentication': '<redacted>',
+                'Authorization': 'Bearer ' + process.env.REACT_APP_OCP_API_AUTHORIZATION,
+                'Authentication': 'Bearer: ' + process.env.REACT_APP_OCP_API_AUTHENTICATION,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -261,7 +262,7 @@ class CredentialsForm extends React.Component {
                 "kind": "Secret",
                 "metadata": {
                     "name": "dbaas-vendor-credentials-jary",
-                    "namespace": "jary-test",
+                    "namespace": "dbaas-operator",
                     "labels": {
                         "related-to": "dbaas-operator",
                         "type": "dbaas-vendor-credentials"
@@ -276,7 +277,7 @@ class CredentialsForm extends React.Component {
             })
         };
         fetch(
-            '/api/v1/namespaces/jary-test/secrets',
+            '/api/v1/namespaces/dbaas-operator/secrets',
             requestOpts
         )
             .then(response => response.json())
@@ -285,17 +286,17 @@ class CredentialsForm extends React.Component {
         requestOpts = {
             method: 'POST',
             headers: {
-                'Authorization': '<redacted>',
-                'Authentication': '<redacted>',
+                'Authorization': 'Bearer ' + process.env.REACT_APP_OCP_API_AUTHORIZATION,
+                'Authentication': 'Bearer: ' + process.env.REACT_APP_OCP_API_AUTHENTICATION,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
                 "apiVersion": "dbaas.redhat.com/v1",
-                "kind": "DBaaSService",
+                "kind": "DBaaSService" ,
                 "metadata": {
                     "name": "atlas-dbaas-service",
-                    "namespace": "jary-test",
+                    "namespace": "dbaas-operator",
                     "labels": {
                         "related-to": "dbaas-operator",
                         "type": "dbaas-vendor-service"
@@ -306,12 +307,12 @@ class CredentialsForm extends React.Component {
                         "name": "MongoDB Atlas"
                     },
                     "credentialsSecretName": "dbaas-vendor-credentials-jary",
-                    "credentialsSecretNamespace": "jary-test",
+                    "credentialsSecretNamespace": "dbaas-operator",
                 },
             })
         };
         fetch(
-            '/apis/dbaas.redhat.com/v1/namespaces/jary-test/dbaasservices',
+            '/apis/dbaas.redhat.com/v1/namespaces/dbaas-operator/dbaasservices',
             requestOpts
         )
             .then(response => response.json())
@@ -322,7 +323,7 @@ class CredentialsForm extends React.Component {
 
     render() {
         return (
-            <form id="credentials-form" onSubmit={this.handleSubmit} className={this.state.active ? 'hide' : null}>
+            <form id="credentials-form" onSubmit={this.handleSubmit} className={this.state.active ? null : 'hide'}>
                 <div className="radio-div">
                     <label className="text-field-label" htmlFor="orgId">
                         Organization ID
@@ -357,45 +358,80 @@ function toggleInstancesForm() {
     this.setState({active: !currentState});
 }
 
+function doStatusFetch() {
+    setTimeout(function () {
+        var requestOpts = {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + process.env.REACT_APP_OCP_API_AUTHORIZATION,
+                'Authentication': 'Bearer: ' + process.env.REACT_APP_OCP_API_AUTHENTICATION,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        };
+        fetch(
+            '/apis/dbaas.redhat.com/v1/namespaces/dbaas-operator/dbaasservices/atlas-dbaas-service',
+            requestOpts
+        )
+            .then(response => response.json())
+            .then(data => parsePayload(data.status));
+        this.setState({showResults: true})
+    }.bind(this), 3000);
+}
+
+function parsePayload(responseJson) {
+    let instances = [];
+    responseJson.projects.forEach(function(value) {
+        value.clusters.forEach(function(value) {
+           instances.push(value);
+        });
+    });
+
+    this.setState({instances: instances});
+}
+
 class InstancesForm extends React.Component {
     constructor(props) {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.toggleClass = this.toggleClass.bind(this);
+        this.submitInstances = this.submitInstances.bind(this);
         this.state = {
-            active: true,
+            active: false,
+            showResults: false,
+            instances: [],
         };
     }
 
     componentDidMount() {
         // eslint-disable-next-line
         toggleInstancesForm = toggleInstancesForm.bind(this);
+        // eslint-disable-next-line
+        doStatusFetch = doStatusFetch.bind(this);
+        // eslint-disable-next-line
+        parsePayload = parsePayload.bind(this);
     }
 
-    toggleClass() {
-        // const currentState = this.state.active;
-        // toggleCredentialsTabTitle();
-        // toggleInstancesTabTitle();
-        // toggleInstancesForm();
-        // this.setState({active: !currentState});
+    submitInstances() {
+        // TODO reach back out and I can help wire this up once we have the instance selection form done
     }
 
     handleSubmit = async (event) => {
         event.preventDefault();
-        this.toggleClass();
+        this.submitInstances();
     };
 
     render() {
         return (
-            <form id="instances-form" onSubmit={this.handleSubmit} className={this.state.active ? 'hide' : null}>
-                <div className="radio-div">
-                    <label className="radio-label">
-                        <input type="radio" id="atlas" value="atlas" name="vendor"/>
-                        instances form
-                    </label>
-                    <br/>
-                    <br/>
-                    <button id="vendor-select-button">Select</button>
+            <form id="instances-form" onSubmit={this.handleSubmit} className={this.state.active ? null : 'hide'}>
+                <div className={"statusResults " + (this.state.showResults ? "hide" : null)}>
+                    Fetching instances from Atlas...
+                </div>
+                <div className={"radio-div " + (this.state.showResults ? null : "hide")}>
+                    {
+                        this.state.instances.map((instance) =>
+                            <pre>{instance.id} {instance.name} {instance.instanceSizeName} {instance.cloudProvider} {instance.cloudRegion}</pre>
+                        )
+                    }
                 </div>
             </form>
         );

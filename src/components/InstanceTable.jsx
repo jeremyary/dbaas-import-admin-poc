@@ -20,11 +20,11 @@ class InstanceTable extends React.Component {
     super(props);
     this.state = {
       columns: [
-        { title: 'Cloud Provider', transforms: [wrappable] },
-        { title: 'Cloud Region', transforms: [wrappable] },
-        { title: 'ID' },
-        { title: 'Instance Size Name', transforms: [wrappable] },
-        { title: 'Name' }
+        { title: 'Instance' },
+        { title: 'Size', transforms: [wrappable] },
+        { title: 'Provider', transforms: [wrappable] },
+        { title: 'Region', transforms: [wrappable] },
+        { title: 'ID' }
       ],
       rows: [],
       selectedInstance: {}
@@ -46,7 +46,7 @@ class InstanceTable extends React.Component {
     let rowList = [];
     if (data) {
       _.forEach(data, rowData => {
-        rowList.push({ cells: _.values(rowData) })
+        rowList.push({ cells: [rowData.name, rowData.instanceSizeName, rowData.cloudProvider, rowData.cloudRegion, rowData.id] })
       })
     };
 
@@ -65,8 +65,30 @@ class InstanceTable extends React.Component {
   }
 
   submitInstances() {
-    // TODO reach back out and I can help wire this up once we have the instance selection form done
-    console.log(this.state.selectedInstance);
+    let patch = [
+      {
+        "op": "add",
+        "path": "/spec/selectedForImport",
+        "value": [ this.state.selectedInstance.id ]
+      }
+    ]
+    let requestOpts = {
+      method: "PATCH",
+      headers: {
+        Authorization: "Bearer " + process.env.REACT_APP_OCP_API_AUTHORIZATION,
+        Authentication:
+            "Bearer: " + process.env.REACT_APP_OCP_API_AUTHENTICATION,
+        "Content-Type": "application/json-patch+json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(patch),
+    };
+    fetch(
+        '/apis/dbaas.redhat.com/v1/namespaces/' + process.env.REACT_APP_OCP_NAMESPACE + '/dbaasservices/atlas-dbaas-service',
+        requestOpts
+    )
+        .then((response) => response.json())
+        .then((data) => this.setState({ postResponse: data }));
   }
 
   handleSubmit = async (event) => {

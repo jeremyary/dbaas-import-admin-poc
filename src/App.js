@@ -313,7 +313,7 @@ class CredentialsForm extends React.Component {
         kind: "Secret",
         metadata: {
           name: "dbaas-vendor-credentials-jary",
-          namespace: "dbaas-operator",
+          namespace: process.env.REACT_APP_OCP_NAMESPACE,
           labels: {
             "related-to": "dbaas-operator",
             type: "dbaas-vendor-credentials",
@@ -329,7 +329,7 @@ class CredentialsForm extends React.Component {
         type: "Opaque",
       }),
     };
-    fetch("/api/v1/namespaces/dbaas-operator/secrets", requestOpts)
+    fetch('/api/v1/namespaces/' + process.env.REACT_APP_OCP_NAMESPACE + '/secrets', requestOpts)
       .then((response) => response.json())
       .then((data) => this.setState({ postResponse: data }));
 
@@ -347,7 +347,7 @@ class CredentialsForm extends React.Component {
         kind: "DBaaSService",
         metadata: {
           name: "atlas-dbaas-service",
-          namespace: "dbaas-operator",
+          namespace: process.env.REACT_APP_OCP_NAMESPACE,
           labels: {
             "related-to": "dbaas-operator",
             type: "dbaas-vendor-service",
@@ -358,12 +358,12 @@ class CredentialsForm extends React.Component {
             name: "MongoDB Atlas",
           },
           credentialsSecretName: "dbaas-vendor-credentials-jary",
-          credentialsSecretNamespace: "dbaas-operator",
+          credentialsSecretNamespace: process.env.REACT_APP_OCP_NAMESPACE,
         },
       }),
     };
     fetch(
-      "/apis/dbaas.redhat.com/v1/namespaces/dbaas-operator/dbaasservices",
+      '/apis/dbaas.redhat.com/v1/namespaces/' + process.env.REACT_APP_OCP_NAMESPACE + '/dbaasservices',
       requestOpts
     )
       .then((response) => response.json())
@@ -449,11 +449,11 @@ function doStatusFetch() {
         },
       };
       fetch(
-        "/apis/dbaas.redhat.com/v1/namespaces/dbaas-operator/dbaasservices/atlas-dbaas-service",
+        '/apis/dbaas.redhat.com/v1/namespaces/' + process.env.REACT_APP_OCP_NAMESPACE + '/dbaasservices/atlas-dbaas-service',
         requestOpts
       )
         .then((response) => response.json())
-        .then((data) => parsePayload(data.status));
+        .then((data) => parsePayload(data));
       this.setState({ showResults: true });
     }.bind(this),
     3000
@@ -462,12 +462,11 @@ function doStatusFetch() {
 
 function parsePayload(responseJson) {
   let instances = [];
-  responseJson.projects.forEach(function (value) {
+  responseJson.status.projects.forEach(function (value) {
     value.clusters.forEach(function (value) {
       instances.push(value);
     });
   });
-
   this.setState({ instances: instances });
 }
 

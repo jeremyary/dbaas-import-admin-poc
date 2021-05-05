@@ -274,9 +274,9 @@ class CredentialsForm extends React.Component {
     this.toggleClass = this.toggleClass.bind(this);
     this.state = {
       active: false,
-      orgId: "6084842689a3a50549e9c5b0",
-      orgPublicKey: "grljrhma",
-      orgPrivateKey: "fe84a759-8d96-4926-8482-3075f411111a",
+      orgId: process.env.REACT_APP_TEAM_ORG_ID,
+      orgPublicKey: process.env.REACT_APP_TEAM_PUBLIC_KEY,
+      orgPrivateKey: process.env.REACT_APP_TEAM_PRIVATE_KEY,
       postResponse: "",
     };
   }
@@ -462,10 +462,13 @@ function doStatusFetch() {
 
 function parsePayload(responseJson) {
   let instances = [];
+  console.log(JSON.stringify(responseJson));
   responseJson.status.projects.forEach(function (value) {
-    value.clusters.forEach(function (value) {
-      instances.push(value);
-    });
+    if (value.hasOwnProperty("clusters")) {
+      value.clusters.forEach(function (value) {
+        instances.push(value);
+      });
+    }
   });
   this.setState({ instances: instances });
 }
